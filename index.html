@@ -1,14 +1,15 @@
 <html>
-  <head>
-    <title>fkorf.github.io</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
-    <style>h1 { font-size: 18px; }</style>
-  </head>
-  <body>
-	<div class="container">
+<head>
+<title>fkorf.github.io</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+<style>h1 { font-size: 18px; }</style>
+</head>
+<body>
+<div class="section">
+<div class="container">
 <div class="row">
 <div class="six columns">
-  <h1>frank's blog</h1>
+<h1>frank's blog</h1>
 </div>
 </div>
 
@@ -23,8 +24,8 @@ I'm proposing a simple change to the way we consider 'variables' in the context 
 We learn that 'variables' are containers for fixed values - which is to say that variables are containers for arbitrary finite values that, once set, do not change until set again. This is our mental model for memory, hard-drives, databases, register-machines and countless others.
 </p>
 <p>
-    <pre>x = 7;</pre>
-    From this point on, x is 7. 
+<pre>x = 7;</pre>
+From this point on, x is 7. 
 </p>
 <p>
 The reality of the world we are trying to model is that few things stay the same, and most things are in a consistent state of change. This means that at the most fundamental level, our abstraction for computing is at odds with our desired model.
@@ -40,27 +41,28 @@ This approach of observe, refine, infer is closer to the way we humans experienc
 </p>
 <p>
 <pre>    x <= 7; </pre>
-    This does not set the value of x to 7. This asserts that the value of x was observed as 7 at least once. So when you request the value of x, you will only get a 7 if the true value of x is 7 in the context you request it.
+This does not set the value of x to 7. This asserts that the value of x was observed as 7 at least once. So when you request the value of x, you will only get a 7 if the true value of x is 7 in the context you request it.
 </p>
 <p>
-  If this sounds familiar it's probably because you are familiar with bayesian thinking. We're never defining a constant value, but instead are always updating our priors to get a better understaind of the truth. </p>
+If this sounds familiar it's probably because you are familiar with bayesian thinking. We're never defining a constant value, but instead are always updating our priors to get a better understanding of the truth. </p>
 <p>
-  An example of this kind of thinking can also be found in implementation of a neural network. No value is constant, and the whole point is to refine complex relationships down to byte-represented values.
+An example of this kind of thinking can also be found in implementation of a neural network. No value is constant, and the whole point is to refine complex relationships down to byte-represented values.
 </p>
-  <p>
-    I'm proposing a system wherein all ram and hard drive is represented as a continuously transforming neural network. And I'm proposing that this constantly transforming, a-structural configuration will create software that runs faster, is easier to understand, and is more flexible and adaptable to change.
+<p>
+I'm proposing a system wherein all ram and hard drive is represented as a continuously transforming neural network. And I'm proposing that this constantly transforming, a-structural configuration will create software that runs faster, is easier to understand, and is more flexible and adaptable to change.
 </p>
-  <p>
+<p>
 I believe that this is possible with existing technology, and does not require changes to standard computer structure and hardware. Additionally I believe that this concept is orthagonal programming linguistics, and can be applied in any programming language. It is not new technology that will propel us into the next age of computing. It is a return to traditional mathematical reasoning when considering the function of a computer that will be the engine that delivers us to what's next. 
 </p>
-  <p>
+<p>
 Like and subscribe for more.
 </p>
-  <p>
-    <pre>-Fk</pre>
-    </p>
+<p>
+<pre>-Fk</pre>
+</p>
 </div>
 </div>
 </div>
-  </body>
+</div>
+</body>
 </html>
