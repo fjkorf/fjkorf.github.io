@@ -1,68 +1,125 @@
+<!DOCTYPE html>
 <html>
-<head>
-<title>fkorf.github.io</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
-<style>h1 { font-size: 18px; }</style>
-</head>
-<body>
-<div class="section">
-<div class="container">
-<div class="row">
-<div class="six columns">
-<h1>frank's blog</h1>
-</div>
-</div>
+  <head>
+    <meta charset="utf-8">
+    <title>FML</title>
+  <style>
+    html {
+    background: rgb(185,185,185);
+    background: linear-gradient(25deg, rgba(185,185,185,1) 0%, rgba(247,247,247,1) 21%, rgba(196,196,196,1) 35%, rgba(166,166,166,1) 68%, rgba(242,242,242,1) 78%, rgba(219,219,219,1) 100%); 
+    }
+    body {
+        font-family: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif; 
+        color: #222222;
+        text-shadow: 1px 1px 2px #FAFAFA, -1px -1px 1px #333333;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    h1, h2, h3 {
+      font-family: Superclarendon, 'Bookman Old Style', 'URW Bookman', 'URW Bookman L', 'Georgia Pro', Georgia, serif; 
+      color: #222222;
+    }
+    a {
+        color: #111111;
+        padding: 10px 30px 6px;
+        position:relative;
+        text-decoration: none;
+        font-weight: 700;
+        margin: 20px auto;
+        display: block;
+    }
+    p, h4 {
+        margin: 20px auto;
+        padding: 13px;
+        position:relative;
+        z-index: 1;
+    }
+    h4 {
+        margin-bottom: 0;
+    }
+    a::after, p::after, h4::after {
+        content:" ";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        border-radius: 10px;
+        border: 1px solid #FFFFFF;
+        border-bottom-color: #444444;
+        border-right-color: #444444;
+        opacity: 20%;
+        z-index: 5;
+    }
+    a::after {
+        background-color: #444444;
+        border: 2px solid #000000;
+        border-top: #FFFFFF;
+        border-left: #FFFFFF;
+        opacity: 20%;
+    }
+    textarea {
+        width: 400px;
+        height: 300px;}
+    #input {
+        display: none;
+    }
+    img {
+        transform: translate(-203.54509475px, -70px) rotate(0deg);
+        transform-origin: 332.8436869px 443.79158253px;
+        width: 665.6873738px;
+        height: 887.58316506px;
+        display: block;
+        z-index: 10;
+    }
+    .img_frame  {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    float: right;
+    margin: 10px;
+}
+  opacity: 1.0;
 
-<div class="row">
-<div class="six columns">
-<h2>static structures in a world of change</h2>
-<h5>11.25.2022</h5>
-<p>
-I'm proposing a simple change to the way we consider 'variables' in the context of software development. 	
-</p>
-<p>
-We learn that 'variables' are containers for fixed values - which is to say that variables are containers for arbitrary finite values that, once set, do not change until set again. This is our mental model for memory, hard-drives, databases, register-machines and countless others.
-</p>
-<p>
-<pre>x = 7;</pre>
-From this point on, x is 7. 
-</p>
-<p>
-The reality of the world we are trying to model is that few things stay the same, and most things are in a consistent state of change. This means that at the most fundamental level, our abstraction for computing is at odds with our desired model.
-</p>
-<p>
-The real world is in constant motion. The volume of water in a river is like the foot traffic of a newly renovated downtown. It is constantly changing. It can be observed, estimated, but never truly known. It is a continuous value. The static value that we think of as the 'variable' is actually a derivative of the value over time. We need a mental model for data that is dynamic by default, and only static in specific situations. 
-</p>
-<p>
-Consider a system where variables are not set, but observed. Multiple observations have the ability to refine the value to provide the best-possible estimation of a true value.
-</p>
-<p>
-This approach of observe, refine, infer is closer to the way we humans experience the world. It follows that this would serve as the basis for modeling said world.
-</p>
-<p>
-<pre>    x <= 7; </pre>
-This does not set the value of x to 7. This asserts that the value of x was observed as 7 at least once. So when you request the value of x, you will only get a 7 if the true value of x is 7 in the context you request it.
-</p>
-<p>
-If this sounds familiar it's probably because you are familiar with bayesian thinking. We're never defining a constant value, but instead are always updating our priors to get a better understanding of the truth. </p>
-<p>
-An example of this kind of thinking can also be found in implementation of a neural network. No value is constant, and the whole point is to refine complex relationships down to byte-represented values.
-</p>
-<p>
-I'm proposing a system wherein all ram and hard drive is represented as a continuously transforming neural network. And I'm proposing that this constantly transforming, a-structural configuration will create software that runs faster, is easier to understand, and is more flexible and adaptable to change.
-</p>
-<p>
-I believe that this is possible with existing technology, and does not require changes to standard computer structure and hardware. Additionally I believe that this concept is orthagonal programming linguistics, and can be applied in any programming language. It is not new technology that will propel us into the next age of computing. It is a return to traditional mathematical reasoning when considering the function of a computer that will be the engine that delivers us to what's next. 
-</p>
-<p>
-Like and subscribe for more.
-</p>
-<p>
-<pre>-Fk</pre>
-</p>
-</div>
-</div>
-</div>
-</div>
-</body>
+  </style>
+  </head>
+  <body>
+    <div id="input">
+
+# Hello, I am Frank!
+
+I develop software, teams, and individuals.
+I like to talk about art, science, and the future.
+[LinkedIn](https://www.linkedin.com/in/fkorf)
+
+## About this page
+
+This page is written in Frank's Markup Language. I have a lightweight FML processor written rust and loaded through WebAssembly. This FML processor is responsible for transforming the FML source into HTML. Neat.
+
+## About Frank Korf
+
+![Me](https://fkorf.com/images/013fdd0ef95b4bcd3917fed0f1be5056.jpg)
+
+#### A lifetime of writing code.
+
+I am equal parts artist, mathematician, scientist, and clown, but mostly I am a programmer. I have spent decades reading and writing every coding language I can find. I am passionate about developing internal and external software solutions that result in  bottom-line business value. My success does not come from my personal programming knowledge, but instead from my ability to work with others. I can engage with developers at any experience level and help give the the tools they need to solve their unique problems.
+
+[LinkedIn](https://www.linkedin.com/in/fkorf)
+
+## A 90 Day Plan
+
+How can you transform you software development workplace in 90 days? It starts with what you are trying to transform. I believe there are synergies between developers personally learning and growing and high-quality software. Software can be performant, fault-tolerant, and engaging for the end user. I believe this kind of software spawns most frequently in a specific kind of developer environment. The process I like to outline consists of 3 keys: engage the developers curiosity, encourage exploration, and ensure the delivery consistently good code.
+
+The first 30 focus on curiousity. Be curious and find the deliverables. Who is recieving code, how frequently, and how is feedback managed? Additionally, encourage the group to be curious. Watch and share conference talks. Anything interesting is worth sharing.
+
+The second 30 are about exploration. The key to high quality exploration is high-quality experiments. Clear hypotheses, an attention to necessary rigor, and careful examination of results. As a leader it is important to align the values of high-quality software and the greater goals of the software and organization.
+
+The final 30 is about delivering. Get the team on stage and start getting feedback. Plan, execute, deliver, review, repeat.
+
+      </div>
+  <div id="output"></div>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <script src="./bootstrap.js"></script>
+  </body>
 </html>
