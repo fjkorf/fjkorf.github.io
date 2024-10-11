@@ -54,11 +54,7 @@
 /******/ 	var wasmImportObjects = {
 /******/ 		"../page_composer/pkg/page_composer_bg.wasm": function() {
 /******/ 			return {
-/******/ 				"./page_composer_bg.js": {
-/******/ 					"__wbg_alert_bb24281c0e6580d0": function(p0i32,p1i32) {
-/******/ 						return installedModules["../page_composer/pkg/page_composer_bg.js"].exports["__wbg_alert_bb24281c0e6580d0"](p0i32,p1i32);
-/******/ 					}
-/******/ 				}
+/******/
 /******/ 			};
 /******/ 		},
 /******/ 	};
@@ -159,7 +155,7 @@
 /******/ 				promises.push(installedWasmModuleData);
 /******/ 			else {
 /******/ 				var importObject = wasmImportObjects[wasmModuleId]();
-/******/ 				var req = fetch(__webpack_require__.p + "" + {"../page_composer/pkg/page_composer_bg.wasm":"cbb366c7116924faaf9d"}[wasmModuleId] + ".module.wasm");
+/******/ 				var req = fetch(__webpack_require__.p + "" + {"../page_composer/pkg/page_composer_bg.wasm":"872b5b788272894c523e"}[wasmModuleId] + ".module.wasm");
 /******/ 				var promise;
 /******/ 				if(importObject instanceof Promise && typeof WebAssembly.compileStreaming === 'function') {
 /******/ 					promise = Promise.all([WebAssembly.compileStreaming(req), importObject]).then(function(items) {
