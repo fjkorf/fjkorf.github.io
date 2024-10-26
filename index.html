@@ -8,18 +8,29 @@
 <head>
     <title>[FWB]</title>
 
-    <link data-trunk rel="rust" data-wasm-opt="2" />
-    <base data-trunk-public-url />
+    
+<script type="module" nonce="pewGUEqgb4eG5iZuLbo6OQ==">
+import init, * as bindings from '/eframe_template-19abaaf06d64d0bc.js';
+const wasm = await init('/eframe_template-19abaaf06d64d0bc_bg.wasm');
 
-    <link data-trunk rel="icon" href="assets/favicon.ico">
+
+window.wasmBindings = bindings;
 
 
-    <link data-trunk rel="copy-file" href="assets/sw.js"/>
-    <link data-trunk rel="copy-file" href="assets/manifest.json" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/icon-1024.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/icon-256.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/icon_ios_touch_192.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/maskable_icon_x512.png" data-target-path="assets"/>
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+    <base href="/" />
+
+    <link rel="icon" href="/favicon-f402c8741ce815ec.ico" integrity="sha384&#x2D;jNOAE6jgE03LznIulCTVP6BH4NrTuROFjP9wj8bV1UUMJKtZAvstFpIAP3PDcFpx"/>
+
+
+    
+    
+    
+    
+    
+    
 
 
     <link rel="manifest" href="assets/manifest.json">
@@ -109,12 +120,13 @@
     <script>
         function write_output( str ) {
             document.getElementById("output").innerHTML = str;
+            window.scrollTo({top:0});
         }
         function set_title( str ) {
          document.title = str;
         }
     </script>
-</head>
+<link rel="modulepreload" href="/eframe_template-19abaaf06d64d0bc.js" crossorigin=anonymous integrity="sha384-/VCNgSs+In+YTTH7wtLH5Htkk1U8cPMhpqcPH3JDg86SU3nu7ujBu/3EoOcQK2zC"><link rel="preload" href="/eframe_template-19abaaf06d64d0bc_bg.wasm" crossorigin=anonymous integrity="sha384-u7cu9KlMDw+ZbtT57sKJzEJqcqQdJGSr3yjkhduKlEOIJo8wziPevPg04cu4ZYhr" as="fetch" type="application/wasm"></head>
 
 <body>
     <div class="grid_wrap">
