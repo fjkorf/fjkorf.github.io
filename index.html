@@ -9,9 +9,9 @@
     <title>[FWB]</title>
 
     
-<script type="module" nonce="pewGUEqgb4eG5iZuLbo6OQ==">
-import init, * as bindings from '/eframe_template-19abaaf06d64d0bc.js';
-const wasm = await init('/eframe_template-19abaaf06d64d0bc_bg.wasm');
+<script type="module" nonce="86rKYnkWmRe1PGZqVzy01Q==">
+import init, * as bindings from '/eframe_template-7131f81c89e61315.js';
+const wasm = await init('/eframe_template-7131f81c89e61315_bg.wasm');
 
 
 window.wasmBindings = bindings;
@@ -52,6 +52,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
             padding: 0 !important;
             height: 100%;
             width: 100%;
+            color: #1F1F1F;
         }
         .grid_wrap {
             display:grid;
@@ -116,6 +117,12 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
                 transform: rotate(360deg);
             }
         }
+        li {
+            margin-left: 20px;
+        }
+        @media( max-width:700px ) {
+            #eframe { display: none;}
+        }
     </style>
     <script>
         function write_output( str ) {
@@ -126,7 +133,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
          document.title = str;
         }
     </script>
-<link rel="modulepreload" href="/eframe_template-19abaaf06d64d0bc.js" crossorigin=anonymous integrity="sha384-/VCNgSs+In+YTTH7wtLH5Htkk1U8cPMhpqcPH3JDg86SU3nu7ujBu/3EoOcQK2zC"><link rel="preload" href="/eframe_template-19abaaf06d64d0bc_bg.wasm" crossorigin=anonymous integrity="sha384-u7cu9KlMDw+ZbtT57sKJzEJqcqQdJGSr3yjkhduKlEOIJo8wziPevPg04cu4ZYhr" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/eframe_template-7131f81c89e61315.js" crossorigin=anonymous integrity="sha384-tEOGIMEmzSfhQy+phWismcp4iyujXzU8xGZkbOSXTU2zkgSbZV6ypyKkxxCBj+4u"><link rel="preload" href="/eframe_template-7131f81c89e61315_bg.wasm" crossorigin=anonymous integrity="sha384-6nxHknP8kjNhQo2jWWlu90VvHY4WC2C80rbpvfo412XAHlFT1E2gOu5beLCbD6BB" as="fetch" type="application/wasm"></head>
 
 <body>
     <div class="grid_wrap">
