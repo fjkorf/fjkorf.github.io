@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BallDrop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Righteous&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Righteous', cursive;
+        }
+
+        .score-popup {
+            font-family: 'Press Start 2P', cursive;
+            position: absolute;
+            color: #FFD700; /* Gold color */
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+            animation: float-up 1s ease-out;
+            opacity: 0;
+            z-index: 1000;
+        }
+
+        #gameInfo {
+            font-family: 'Press Start 2P', cursive;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        #gameInfo p {
+            margin: 10px 0;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+
+        #restartButton {
+            font-family: 'Press Start 2P', cursive;
+            padding: 10px 20px;
+            background-color: #FF4D4D;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #CC0000;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        #restartButton:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #CC0000;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <div id="gameInfo">
+        <p>Balls Remaining: <span id="ballCount">10</span></p>
+        <p id="gameStatus"></p>
+        <button id="restartButton" style="display: none;">Restart Game</button>
+    </div>
+    <script src="./main.js">
+    </script>
+</body>
+</html>
