@@ -1,40 +1,135 @@
+//----------------------
+// consts
+//----------------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const ballCountElement = document.getElementById("ballCount");
 const gameStatusElement = document.getElementById("gameStatus");
 const restartButton = document.getElementById("restartButton");
+const gameInfoElement = document.getElementById("gameInfo");
 
+const CONFIG = {
+  blue_pin_chance : 0.1,
+  ballRadius : 10,
+  pinRadius : 5,
+  gravity : 0.2,
+  bounce : 0.6,
+}
+
+//----------------------
+// game variables
+//----------------------
 let balls = [];
 let pins = [];
 const buckets = [];
-const ballRadius = 10;
-const pinRadius = 5;
-const gravity = 0.2;
-const bounce = 0.6;
 let levelOver = false;
 
-let totalBalls = 20;
+let totalBalls = 10;
 let score = 0;
 let gameActive = true;
 let currentLevel = 1;
 
-// Function to draw background gradient
-function drawBackground(level) {
-  const background = {
-    colors: [
-      `hsl(${level * 30}, 70%, 70%)`,
-      `hsl(${level * 30 + 60}, 70%, 70%)`,
-    ],
-    name: `Level ${level}`,
-  };
+
+//----------------------
+// util
+//----------------------
+
+function drawBackground() {
+  const background =  [
+      `hsl(${currentLevel * 30}, 70%, 70%)`,
+      `hsl(${currentLevel * 30 + 60}, 70%, 70%)`,
+    ];
 
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, background.colors[0]);
-  gradient.addColorStop(1, background.colors[1]);
-
+  gradient.addColorStop(0, background[0]);
+  gradient.addColorStop(1, background[1]);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
+
+//----------------------
+// init
+//----------------------
+
+function initializeLevel(level) {
+  levelOver = false;
+  // Clear existing pins and balls
+  pins = [];
+  balls = [];
+
+  // Reset balls count
+  totalBalls += 5;
+
+  // Create new pin layout
+  if (levelLayouts[level]) {
+    levelLayouts[level]();
+  } else {
+    // If level doesn't exist, create a random pattern
+    for (let i = 0; i < 30 + level * 5; i++) {
+      pins.push(
+        createPin(
+          100 + Math.random() * (canvas.width - 200),
+          150 + Math.random() * (canvas.height - 300),
+        ),
+      );
+    }
+  }
+
+  // Create buckets
+  buckets.length = 0;
+  for (let i = 0; i < 5; i++) {
+    buckets.push({
+      x: 25 + i * 75,
+      y: canvas.height - 30,
+      width: 50,
+      height: 30,
+      score: (i + 1) * 100,
+    });
+  }
+
+  gameActive = true;
+}
+
+function initializeGame() {
+  score = 0;
+  currentLevel = 1;
+  restartButton.style.display = "none";
+  gameInfoElement.style.pointerEvents = 'none';
+  setStatus("<h1>BallDrop</h1><br /><small>tap above to begin</small>", 5000);
+  initializeLevel(currentLevel);
+}
+
+//----------------------
+// UI
+//----------------------
+function setStatus(message, timeout=1000) {
+  gameStatusElement.innerHTML = message;
+  setTimeout(() => {
+    if (gameActive) gameStatusElement.textContent = "";
+  }, timeout);
+}
+
+function showScorePopup(x, y, score) {
+  const rect = canvas.getBoundingClientRect();
+  x += rect.left;
+  y += rect.top;
+
+  let elm = document.createElement("div");
+  elm.className = "score-popup";
+  elm.textContent = `+${score}`;
+  elm.style.left = `${x}px`;
+  elm.style.top = `${y}px`;
+  document.body.appendChild(elm);
+
+  setTimeout(() => {
+    elm.remove();
+  }, 1000);
+}
+
+
+//----------------------
+// classes
+//----------------------
+
 class Particle {
   constructor(x, y, config = {}) {
     this.x = x;
@@ -66,24 +161,9 @@ class Particle {
   }
 }
 
-class ScorePopup {
-  constructor(x, y, score) {
-    this.element = document.createElement("div");
-    this.element.className = "score-popup";
-    this.element.textContent = `+${score}`;
-    this.element.style.left = `${x}px`;
-    this.element.style.top = `${y}px`;
-    document.body.appendChild(this.element);
-
-    setTimeout(() => {
-      this.element.remove();
-    }, 1000);
-  }
-}
 
 let particles = [];
 
-// Function to create different particle effects
 function createParticleEffect(x, y, type) {
   const effects = {
     pin: {
@@ -122,32 +202,19 @@ function createParticleEffect(x, y, type) {
   }
 }
 
-function createParticles(x, y, color) {
-  for (let i = 0; i < 10; i++) {
-    particles.push(new Particle(x, y, color));
-  }
-}
-
-function showScorePopup(x, y, score) {
-  const rect = canvas.getBoundingClientRect();
-  new ScorePopup(rect.left + x, rect.top + y, score);
-}
-
-// Modify the pin creation in levelLayouts to include blue pins
 function createPin(x, y) {
   return {
     x: x,
     y: y,
-    radius: pinRadius,
+    radius: CONFIG.pinRadius,
     active: true,
-    isBlue: Math.random() < 0.2, // 20% chance of being a blue pin
+    isBlue: Math.random() < CONFIG.blue_pin_chance,
   };
 }
 
 function placePattern(pattern) {
-  // Maze Pattern
   const spacing = 40;
-  const startX = 100;
+  const startX = 75;
   const startY = 150;
 
   pattern.forEach((row, i) => {
@@ -418,72 +485,6 @@ const levelLayouts = {
   },
 };
 
-function initializeLevel(level) {
-  levelOver = false;
-  // Clear existing pins and balls
-  pins = [];
-  balls = [];
-
-  // Reset balls count
-  totalBalls += 10;
-  ballCountElement.textContent = totalBalls;
-
-  // Create new pin layout
-  if (levelLayouts[level]) {
-    levelLayouts[level]();
-  } else {
-    // If level doesn't exist, create a random pattern
-    for (let i = 0; i < 30 + level * 5; i++) {
-      pins.push(
-        createPin(
-          100 + Math.random() * (canvas.width - 200),
-          150 + Math.random() * (canvas.height - 300),
-        ),
-      );
-    }
-  }
-
-  // Create buckets
-  buckets.length = 0;
-  for (let i = 0; i < 5; i++) {
-    buckets.push({
-      x: 25 + i * 75,
-      y: canvas.height - 30,
-      width: 50,
-      height: 30,
-      score: (i + 1) * 100,
-    });
-  }
-
-  gameActive = true;
-
-  const overlay = document.createElement("div");
-  overlay.style.position = "absolute";
-  overlay.style.top = "0";
-  overlay.style.left = "0";
-  overlay.style.width = "100%";
-  overlay.style.height = "100%";
-  overlay.style.backgroundColor = "white";
-  overlay.style.opacity = "0";
-  overlay.style.transition = "opacity 0.5s";
-  overlay.style.pointerEvents = "none";
-  document.body.appendChild(overlay);
-
-  requestAnimationFrame(() => {
-    overlay.style.opacity = "0.5";
-    setTimeout(() => {
-      overlay.style.opacity = "0";
-      setTimeout(() => overlay.remove(), 500);
-    }, 100);
-  });
-}
-
-function initializeGame() {
-  score = 0;
-  currentLevel = 1;
-  restartButton.style.display = "none";
-  initializeLevel(currentLevel);
-}
 
 class Ball {
   constructor(x, y) {
@@ -491,25 +492,25 @@ class Ball {
     this.y = y;
     this.vx = 0;
     this.vy = 0;
-    this.radius = ballRadius;
+    this.radius = CONFIG.ballRadius;
     this.active = true;
   }
 
   update() {
     if (!this.active) return;
 
-    this.vy += gravity;
+    this.vy += CONFIG.gravity;
     this.x += this.vx;
     this.y += this.vy;
 
     // Wall collisions
     if (this.x < this.radius) {
       this.x = this.radius;
-      this.vx *= -bounce;
+      this.vx *= -CONFIG.bounce;
     }
     if (this.x > canvas.width - this.radius) {
       this.x = canvas.width - this.radius;
-      this.vx *= -bounce;
+      this.vx *= -CONFIG.bounce;
     }
 
     // Pin collisions
@@ -524,8 +525,8 @@ class Ball {
         const angle = Math.atan2(dy, dx);
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
 
-        this.vx = Math.cos(angle) * speed * bounce;
-        this.vy = Math.sin(angle) * speed * bounce;
+        this.vx = Math.cos(angle) * speed * CONFIG.bounce;
+        this.vy = Math.sin(angle) * speed * CONFIG.bounce;
 
         const minDistance = this.radius + pin.radius;
         this.x = pin.x + Math.cos(angle) * minDistance;
@@ -547,11 +548,7 @@ class Ball {
         // Add balls for blue pins
         if (pin.isBlue) {
           totalBalls += 3;
-          ballCountElement.textContent = totalBalls;
-          gameStatusElement.textContent = "+3 Balls!";
-          setTimeout(() => {
-            if (gameActive) gameStatusElement.textContent = "";
-          }, 1000);
+          setStatus("+3 Balls!");
         }
       }
     });
@@ -620,10 +617,7 @@ function checkGameEnd() {
   if (remainingPins === 0) {
     levelOver = true;
     currentLevel++;
-    gameStatusElement.textContent = `Level ${currentLevel - 1} Complete!`;
-    setTimeout(() => {
-      if (gameActive) gameStatusElement.textContent = "";
-    }, 1000);
+    setStatus( `Level ${currentLevel - 1} Complete!<br />Moving to Level ${currentLevel}` );
     setTimeout(() => {
       initializeLevel(currentLevel);
     }, 2000);
@@ -634,7 +628,8 @@ function checkGameEnd() {
   const activeBalls = balls.filter((ball) => ball.active).length;
   if (totalBalls === 0 && activeBalls === 0) {
     gameActive = false;
-    gameStatusElement.textContent = `Game Over! Final Score: ${score}`;
+    setStatus( `Game Over!<br />Final Score: ${score}` );
+    gameInfoElement.style.pointerEvents = 'all';
     restartButton.style.display = "block";
   }
 }
@@ -673,41 +668,54 @@ function drawPin(pin) {
 
   ctx.restore();
 }
+//---------------------
+// Game Loop Functions
+//---------------------
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawBackground(currentLevel);
-
-  // Draw level info
+function drawHUD() {
   ctx.save();
+  // Draw level info
+  const levelText = `LEVEL ${currentLevel}`;
   ctx.fillStyle = "white";
   ctx.font = '16px "Press Start 2P"';
   ctx.textBaseline = "top";
   ctx.strokeStyle = "black";
   ctx.lineWidth = 4;
-  ctx.strokeText(`LEVEL ${currentLevel}`, 10, 10);
-  ctx.fillText(`LEVEL ${currentLevel}`, 10, 10);
+  ctx.strokeText(levelText, 10, 10);
+  ctx.fillText(levelText, 10, 10);
 
   // Draw score with pixel font
-  ctx.font = '16px "Press Start 2P"';
   const scoreText = `SCORE: ${score}`;
-  ctx.strokeText(scoreText, canvas.width - 200, 10);
-  ctx.fillText(scoreText, canvas.width - 200, 10);
-  ctx.restore();
+  ctx.font = '12px "Press Start 2P"';
+  ctx.strokeText(scoreText, 10, 30);
+  ctx.fillText(scoreText, 10, 30);
 
+  // Draw balls remaining with pixel font
+  const remainingText = `BALLS: ${totalBalls}`;
+  ctx.font = '12px "Press Start 2P"';
+  ctx.strokeText(remainingText, 10, 46);
+  ctx.fillText(remainingText, 10, 46);
+  ctx.restore();
+}
+
+function updateParticles() {
   // Update and draw particles
   particles = particles.filter((particle) => particle.life > 0);
   particles.forEach((particle) => {
     particle.update();
     particle.draw(ctx);
   });
+}
 
+function drawPins() {
   // Draw pins with colors
   pins.forEach((pin) => {
     drawPin(pin);
   });
+}
 
+function drawBuckets() {
   // Draw buckets
   buckets.forEach((bucket) => {
     const gradient = ctx.createLinearGradient(
@@ -716,8 +724,8 @@ function gameLoop() {
       bucket.x,
       bucket.y + bucket.height,
     );
-    gradient.addColorStop(0, "#4169E1"); // Royal Blue
-    gradient.addColorStop(1, "#1E90FF"); // Dodger Blue
+    gradient.addColorStop(0, "#4169E1");
+    gradient.addColorStop(1, "#1E90FF");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(bucket.x, bucket.y, bucket.width, bucket.height);
@@ -725,12 +733,25 @@ function gameLoop() {
     // Score text with shadow
     ctx.save();
     ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 2;
     ctx.fillStyle = "white";
     ctx.font = '10px "Press Start 2P"';
     ctx.fillText(bucket.score, bucket.x + 10, bucket.y + 20);
     ctx.restore();
   });
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawBackground();
+
+  drawHUD();
+
+  updateParticles();
+
+  drawPins();
+  drawBuckets();
 
   // Update and draw balls
   balls.forEach((ball) => {
@@ -755,7 +776,6 @@ canvas.addEventListener("click", (event) => {
   if (y < 100 && totalBalls > 0) {
     balls.push(new Ball(x, y));
     totalBalls--;
-    ballCountElement.textContent = totalBalls;
   }
 });
 
