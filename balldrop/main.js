@@ -143,6 +143,7 @@ function initializeGame() {
   bounce = CONFIG.bounce;
 
   ui.restartButton.visible = false;
+  setStatus(["tap above", "to begin"]);
   initializeLevel(currentLevel);
 }
 
