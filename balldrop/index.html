@@ -8,122 +8,21 @@
             rel="stylesheet"
         />
         <style>
+            html,
             body {
                 margin: 0;
                 padding: 0;
-                color: #4c9197;
-            }
-
-            .score-popup {
-                font-family: "Press Start 2P", cursive;
-                position: absolute;
-                color: #f78d7b;
-                text-shadow: 2px 2px 0 #ffffff;
-                pointer-events: none;
-                animation: float-up 1s ease-out;
-                opacity: 0;
-                z-index: 1000;
-            }
-
-            #gameInfo {
-                font-family: "Press Start 2P", cursive;
-                margin-top: 10px;
-                color: #4c9197;
-                text-shadow: 2px 2px 0 #ffffff;
-                text-align: center;
-            }
-
-            #gameInfo p {
-                margin: 10px 0;
-            }
-            #gameInfo {
-                pointer-events: none;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 400px;
-                height: 600px;
-                display: grid;
-                justify-content: center;
-                align-items: center;
-                padding: 50px;
                 box-sizing: border-box;
-            }
-
-            #gameStatus {
-                margin: 10px 0;
-            }
-            #gameMenu {
-                position: fixed;
-                top: 5px;
-                left: 5px;
-                width: 390px;
-                text-align: right;
-            }
-
-            .button {
-                pointer-events: default;
-                font-family: "Press Start 2P", cursive;
-                padding: 10px 20px;
-                background-color: #ff4d4d;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                text-transform: uppercase;
-                box-shadow: 0 4px 0 #cc0000;
-                transition:
-                    transform 0.1s,
-                    box-shadow 0.1s;
-                margin: 5px 0;
-            }
-
-            .button:hover {
-                transform: translateY(2px);
-                box-shadow: 0 2px 0 #cc0000;
-            }
-            #shopButton {
-                margin-bottom: 16px;
-            }
-            .shop-item {
-                font-family: "Press Start 2P", cursive;
-                font-size: 10px;
-                padding: 10px 20px;
-                background-color: white;
-                color: #4c9197;
-                border: none;
-                border-radius: 0px;
-                cursor: pointer;
-                transition: transform 0.1s;
-            }
-            .shop-item:hover {
-                transform: translateY(2px);
-            }
-
-            @keyframes float-up {
-                0% {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translateY(-50px);
-                    opacity: 0;
-                }
+                touch-action: none; /* Prevent default touch behavior */
+                height: 100vh;
+                display: grid;
+                align-items: center;
+                justify-content: center;
             }
         </style>
     </head>
     <body>
         <canvas id="gameCanvas" width="400" height="600"></canvas>
-        <div id="gameMenu">
-            <button id="shopButton" class="button">Shop</button>
-        </div>
-        <div id="gameInfo">
-            <p id="gameStatus"></p>
-            <button id="restartButton" class="button" style="display: none">
-                Restart Game
-            </button>
-        </div>
-
         <script src="./main.js"></script>
     </body>
 </html>

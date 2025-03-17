@@ -4,7 +4,6 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const gameStatusElement = document.getElementById("gameStatus");
-const restartButton = document.getElementById("restartButton");
 const gameInfoElement = document.getElementById("gameInfo");
 
 const CONFIG = {
@@ -14,6 +13,7 @@ const CONFIG = {
   pinRadius: 5,
   gravity: 0.2,
   bounce: 0.6,
+  totalBalls: 15,
 };
 
 //----------------------
@@ -24,10 +24,53 @@ let pins = [];
 const buckets = [];
 let levelOver = false;
 
-let totalBalls = 15;
 let score = 0;
 let gameActive = true;
 let currentLevel = 1;
+
+let isPaused = false;
+let showShop = false;
+
+let particles = [];
+
+let totalBalls = CONFIG.totalBalls;
+let ballRadius = CONFIG.ballRadius;
+let gravity = CONFIG.gravity;
+let bounce = CONFIG.bounce;
+
+// Shop and credits system
+
+let credits = 0;
+let shopItems = [
+  {
+    name: "10 Extra Balls",
+    cost: 5,
+    action: () => {
+      totalBalls += 10;
+    },
+  },
+  {
+    name: "Big Balls",
+    cost: 10,
+    action: () => {
+      ballRadius += 2;
+    },
+  },
+  {
+    name: "Less Gravity",
+    cost: 10,
+    action: () => {
+      gravity *= 0.8;
+    },
+  },
+  {
+    name: "More Bounce",
+    cost: 15,
+    action: () => {
+      bounce += 0.1;
+    },
+  },
+];
 
 //----------------------
 // util
@@ -60,7 +103,7 @@ function initializeLevel(level) {
   totalBalls += 5;
 
   // Create new pin layout
-  const l = level % 20;
+  const l = level % 25;
   if (levelLayouts[l]) {
     levelLayouts[l]();
   } else {
@@ -92,43 +135,31 @@ function initializeLevel(level) {
 
 function initializeGame() {
   score = 0;
+  credits = 0;
   currentLevel = 1;
-  totalBalls = 15;
-  restartButton.style.display = "none";
-  gameInfoElement.style.pointerEvents = "none";
-  setStatus("<h1>BallDrop</h1><br /><small>tap above to begin</small>", 5000);
+  totalBalls = CONFIG.totalBalls;
+  ballRadius = CONFIG.ballRadius;
+  gravity = CONFIG.gravity;
+  bounce = CONFIG.bounce;
+
+  ui.restartButton.visible = false;
   initializeLevel(currentLevel);
 }
 
 //----------------------
 // UI
 //----------------------
-function setStatus(message, timeout = 1000) {
-  gameStatusElement.innerHTML = message;
-  setTimeout(() => {
-    if (gameActive) gameStatusElement.textContent = "";
-  }, timeout);
+function setStatus(messages, timeout = 3000) {
+  messages.forEach((message, i) => {
+    ui.children.push(new MessageIndicator(message, i * 20, timeout));
+  });
 }
 
 function showScorePopup(x, y, score) {
   const rect = canvas.getBoundingClientRect();
   x += rect.left;
   y += rect.top;
-
-  if (typeof score === "string" && score.includes("Credit")) {
-    y -= 100;
-  }
-
-  let elm = document.createElement("div");
-  elm.className = "score-popup";
-  elm.textContent = `+${score}`;
-  elm.style.left = `${x}px`;
-  elm.style.top = `${y}px`;
-  document.body.appendChild(elm);
-
-  setTimeout(() => {
-    elm.remove();
-  }, 1000);
+  ui.children.push(new ScorePopupIndicator(x, y, score));
 }
 
 //----------------------
@@ -141,25 +172,25 @@ class Ball {
     this.y = y;
     this.vx = 0;
     this.vy = 0;
-    this.radius = CONFIG.ballRadius;
+    this.radius = ballRadius;
     this.active = true;
   }
 
   update() {
     if (!this.active) return;
 
-    this.vy += CONFIG.gravity;
+    this.vy += gravity;
     this.x += this.vx;
     this.y += this.vy;
 
     // Wall collisions
     if (this.x < this.radius) {
       this.x = this.radius;
-      this.vx *= -CONFIG.bounce;
+      this.vx *= -bounce;
     }
     if (this.x > canvas.width - this.radius) {
       this.x = canvas.width - this.radius;
-      this.vx *= -CONFIG.bounce;
+      this.vx *= -bounce;
     }
 
     // Pin collisions
@@ -174,8 +205,8 @@ class Ball {
         const angle = Math.atan2(dy, dx);
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
 
-        this.vx = Math.cos(angle) * speed * CONFIG.bounce;
-        this.vy = Math.sin(angle) * speed * CONFIG.bounce;
+        this.vx = Math.cos(angle) * speed * bounce;
+        this.vy = Math.sin(angle) * speed * bounce;
 
         const minDistance = this.radius + pin.radius;
         this.x = pin.x + Math.cos(angle) * minDistance;
@@ -197,13 +228,13 @@ class Ball {
         // Add balls for blue pins
         if (pin.isBlue) {
           totalBalls += 3;
-          setStatus("+3 Balls!");
+          setStatus(["+3 Balls!"]);
         }
 
         // Add credits for gold pins
         if (pin.isGold) {
           credits += 1;
-          setStatus("+1 Credit");
+          setStatus(["+1 Credit"]);
         }
       }
     });
@@ -293,8 +324,6 @@ class Particle {
     ctx.closePath();
   }
 }
-
-let particles = [];
 
 function createParticleEffect(x, y, type) {
   const effects = {
@@ -533,8 +562,8 @@ const levelLayouts = {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const points = 5;
-    const innerRadius = 50;
-    const outerRadius = 150;
+    const innerRadius = 20;
+    const outerRadius = 130;
 
     // Create star points
     for (let i = 0; i < points * 2; i++) {
@@ -618,6 +647,116 @@ const levelLayouts = {
       }
     }
   },
+  17: function () {
+    // Hexagonal Pattern
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const ringCount = 3;
+
+    for (let ring = 0; ring < ringCount; ring++) {
+      const radius = 60 + ring * 40;
+      const sides = 6;
+      const angleIncrement = Math.PI / 3;
+
+      for (let i = 0; i < sides; i++) {
+        const angle = angleIncrement * i;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        pins.push(createPin(x, y));
+      }
+    }
+  },
+
+  18: function () {
+    // Square Spiral Pattern
+    let x = 0,
+      y = 0;
+    const steps = 20;
+    const spacing = 30;
+
+    for (let i = 0; i < steps; i++) {
+      const stepSize = Math.min(i % 4 === 1 ? 2 : 1, i);
+      x += i % 2 === 0 ? 1 : -1;
+      y += i % 2 !== 0 ? 1 : -1;
+
+      for (let j = 0; j < stepSize; j++) {
+        pins.push(createPin(centerX + x * spacing, centerY + y * spacing));
+      }
+    }
+  },
+
+  19: function () {
+    // Radial Grid Pattern
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const rings = 4;
+
+    for (let ring = 0; ring < rings; ring++) {
+      const radius = 50 + ring * 30;
+      const squareSize = 6;
+      const halfSize = squareSize / 2;
+
+      for (let i = -halfSize; i <= halfSize; i++) {
+        for (let j = -halfSize; j <= halfSize; j++) {
+          if (Math.abs(i) + Math.abs(j) === halfSize) {
+            pins.push(createPin(centerX + i * radius, centerY + j * radius));
+          }
+        }
+      }
+    }
+  },
+
+  20: function () {
+    // Checkerboard Pattern
+    const gridSize = 6;
+    const spacing = canvas.width / (gridSize * 2);
+
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        if ((row + col) % 2 === 0) {
+          pins.push(createPin(50 + col * spacing, 150 + row * spacing));
+        }
+      }
+    }
+  },
+
+  21: function () {
+    // Fibonacci Spiral Pattern
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    let a = 0,
+      b = 1;
+
+    for (let i = 0; i < 30; i++) {
+      const radius = Math.pow(i + 1, 0.6);
+      const angle = (Math.sqrt(i) * Math.PI) / 2;
+
+      pins.push(createPin(centerX + a * radius, centerY + b * radius));
+      [a, b] = [b - a, a];
+    }
+  },
+
+  22: function () {
+    // Curl Pattern
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const curls = 4;
+
+    for (let c = 0; c < curls; c++) {
+      const radius = 50 + c * 30;
+      const amplitude = 15;
+      const wavelength = (Math.PI * 2) / (radius / 4);
+
+      for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+        const x = centerX + radius * Math.cos(angle);
+        const y =
+          centerY +
+          radius * Math.sin(angle) +
+          Math.sin(angle * wavelength) * amplitude;
+        pins.push(createPin(x, y));
+      }
+    }
+  },
 };
 
 function checkGameEnd() {
@@ -629,9 +768,7 @@ function checkGameEnd() {
   if (remainingPins === 0) {
     levelOver = true;
     currentLevel++;
-    setStatus(
-      `Level ${currentLevel - 1} Complete!<br />Moving to Level ${currentLevel}`,
-    );
+    setStatus([`${currentLevel - 1} Complete!`, `Moving to ${currentLevel}`]);
     setTimeout(() => {
       initializeLevel(currentLevel);
     }, 2000);
@@ -643,9 +780,8 @@ function checkGameEnd() {
   if (totalBalls === 0 && activeBalls === 0) {
     gameActive = false;
     levelOver = true;
-    setStatus(`Game Over!<br />Final Score: ${score}`);
-    gameInfoElement.style.pointerEvents = "all";
-    restartButton.style.display = "block";
+    setStatus([`Game Over!`, `Final Score: ${score}`]);
+    ui.restartButton.visible = true;
   }
 }
 
@@ -688,42 +824,403 @@ function drawPin(pin) {
 
   ctx.restore();
 }
+
+//---------------------
+// UI
+//---------------------
+
+class UIComponent {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.visible = true;
+    this.children = [];
+    this.width = 0;
+    this.height = 0;
+  }
+
+  add(child) {
+    this.children.push(child);
+  }
+  remove(child) {
+    let i = this.children.findIndex((a) => a == child);
+    if (i >= 0) {
+      this.children.splice(i, 1);
+    }
+  }
+
+  update() {
+    if (!this.visible) return;
+
+    // Update children
+    this.children.forEach((child) => {
+      child.update();
+    });
+  }
+
+  draw(ctx) {
+    if (!this.visible) return;
+
+    // Draw children first
+    this.children.forEach((child) => child.draw(ctx));
+
+    // Default implementation (override in subclasses)
+  }
+
+  handleClick(x, y) {
+    if (!this.visible) return;
+    // Handle click events for the component and its children
+    if (
+      x >= this.x &&
+      x <= this.x + this.width &&
+      y >= this.y &&
+      y <= this.y + this.height
+    )
+      this.onClick();
+
+    // Recurse to child components
+    this.children.forEach((child) => {
+      child.handleClick(x, y);
+    });
+  }
+
+  onClick() {
+    // Override in subclasses
+  }
+}
+
+// Create a class for the HUD container
+class HUDContainer extends UIComponent {
+  constructor() {
+    super(0, 0);
+
+    this.width = canvas.width;
+    this.height = canvas.height;
+
+    this.restartButton = new Button(
+      { x: 10, y: canvas.height / 2 + 50 },
+      "RESTART",
+      () => {
+        initializeGame();
+      },
+    );
+    this.restartButton.width = canvas.width - 20;
+    this.restartButton.visible = false;
+
+    this.add(new LevelIndicator());
+    this.add(new ScoreIndicator());
+    this.add(new CreditsIndicator());
+    this.add(new BallsIndicator());
+    this.add(new HighScoreIndicator());
+    this.add(new ShopMenu());
+    this.add(new TitleIndicator());
+    this.add(this.restartButton);
+
+    this.add(
+      new Button({ x: canvas.width - 100, y: 16 }, "PAUSE", () => {
+        isPaused = !isPaused;
+        showShop = true;
+      }),
+    );
+  }
+
+  draw(ctx) {
+    super.draw(ctx);
+  }
+}
+
+// Create specific UI components for HUD elements
+class Indicator extends UIComponent {
+  constructor(text, x, y) {
+    super(x, y);
+
+    this.text = text;
+    this.textColor = "white";
+    this.strokeColor = "#404040";
+    this.font = '12px "Press Start 2P"';
+  }
+
+  draw(ctx) {
+    if (!this.visible || !gameActive) return;
+
+    ctx.fillStyle = this.textColor;
+    ctx.font = this.font;
+    ctx.strokeStyle = this.strokeColor;
+    ctx.lineWidth = 4;
+    ctx.strokeText(this.text, this.x + 10, this.y + 20);
+    ctx.fillText(this.text, this.x + 10, this.y + 20);
+  }
+}
+
+class LevelIndicator extends Indicator {
+  constructor() {
+    super("LEVEL 1", 10, 50);
+  }
+
+  setLevel(level) {
+    this.text = `LEVEL ${level}`;
+  }
+}
+
+class CreditsIndicator extends Indicator {
+  constructor() {
+    super("CREDITS: 0", 10, 70);
+
+    // Update score whenever called
+    this.updateScore = () => {
+      this.text = `CREDITS: ${credits}`;
+    };
+  }
+
+  update() {
+    super.update();
+    if (gameActive) {
+      this.updateScore();
+    }
+  }
+}
+
+class ScoreIndicator extends Indicator {
+  constructor() {
+    super("SCORE: 0", 10, 30);
+
+    // Update score whenever called
+    this.updateScore = () => {
+      this.text = `SCORE: ${score}`;
+    };
+  }
+
+  update() {
+    super.update();
+    if (gameActive) {
+      this.text = `SCORE: ${score}`;
+    }
+  }
+}
+
+class BallsIndicator extends Indicator {
+  constructor() {
+    super("BALLS: 15", 10, 90);
+
+    // Update balls whenever called
+    this.updateBalls = () => {
+      this.text = `BALLS: ${totalBalls}`;
+    };
+  }
+
+  update() {
+    super.update();
+    if (gameActive) {
+      this.updateBalls();
+    }
+  }
+}
+
+class HighScoreIndicator extends Indicator {
+  constructor() {
+    super("HIGH SCORE", 10, 10);
+
+    // Update high score whenever called
+    this.updateHighScore = () => {
+      const storedHighScore = localStorage.getItem("ballDropHighScore") || 0;
+      this.text = `HIGH: ${storedHighScore}`;
+    };
+  }
+
+  update() {
+    super.update();
+    if (gameActive) {
+      this.updateHighScore();
+    }
+  }
+}
+
+class MessageIndicator extends Indicator {
+  constructor(message, y = 0, timeout = 1200) {
+    super(message, canvas.width / 2 - 100, canvas.height / 3 + y);
+    this.font = '16px "Press Start 2P"';
+    const item = this;
+    setTimeout(() => ui.remove(item), timeout);
+  }
+
+  update() {
+    super.update();
+    this.y -= 0.5;
+  }
+}
+
+class ScorePopupIndicator extends Indicator {
+  constructor(x, y, score) {
+    super(`+${score}`, x, y);
+    const item = this;
+    setTimeout(() => ui.remove(item), 1000);
+  }
+  update() {
+    super.update();
+    this.y -= 1;
+  }
+}
+
+class TitleIndicator extends Indicator {
+  constructor(message) {
+    super("BallDrop", canvas.width / 2 - 120, canvas.height / 2);
+    this.font = '32px "Press Start 2P"';
+    const item = this;
+    setTimeout(() => ui.remove(item), 5000);
+  }
+
+  update() {
+    super.update();
+    this.y -= 0.15;
+  }
+}
+
+// Create a Button class for interactive UI elements
+class Button extends UIComponent {
+  constructor(position, label, onClick) {
+    super(position.x, position.y);
+
+    this.label = label;
+    this._onClick = onClick;
+    this.backgroundColor = "#ff4d4d";
+    this.textColor = "white";
+    this.clickColor = "#cc0000";
+    this.font = '12px "Press Start 2P"';
+    this.clicked = false;
+
+    // Set initial dimensions
+    const textWidth = ctx.measureText(label).width * 2 + 16;
+    super.width = textWidth;
+    super.height = 30;
+  }
+
+  draw(ctx) {
+    if (!this.visible) return;
+
+    const yOffset = this.clicked ? 3 : 0;
+
+    ctx.fillStyle = this.clicked ? this.clickColor : this.backgroundColor;
+    ctx.fillRect(this.x, this.y + yOffset, this.width, this.height);
+
+    ctx.fillStyle = this.textColor;
+    ctx.font = this.font;
+
+    // Add text with shadow for better visibility
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 2;
+    ctx.fillText(this.label, this.x + 10, this.y + 20 + yOffset);
+  }
+
+  onClick() {
+    const btn = this;
+    if (btn._onClick) {
+      btn.clicked = true;
+      setTimeout(() => (btn.clicked = false), 200);
+      btn._onClick();
+    }
+  }
+}
+
+function unpause() {
+  isPaused = false;
+  showShop = false;
+}
+
+class ShopMenu extends UIComponent {
+  constructor() {
+    super((canvas.width - 300) / 2, 150);
+
+    const itemsPerRow = 1;
+    shopItems.forEach((item, index) => {
+      // Calculate position based on grid layout
+      const col = index % itemsPerRow;
+      const row = Math.floor(index / itemsPerRow);
+      const x = this.x + col * (300 / itemsPerRow) + 10;
+      const y = this.y + row * 40 + 10;
+      const btn = new Button(
+        { x, y },
+        `${item.name} (${item.cost})`,
+        this.purchase(item),
+      );
+      btn.width = 280;
+      this.children.push(btn);
+    });
+  }
+
+  purchase(item) {
+    return () => {
+      if (credits < item.cost) {
+        setStatus(["Not Enough", " Credits"]);
+      } else {
+        credits -= item.cost;
+        setStatus([`${item.name}`, "purchased"]);
+        item.action();
+      }
+    };
+  }
+
+  draw(ctx) {
+    this.visible = isPaused && showShop;
+    if (!this.visible) return;
+
+    ctx.save();
+
+    // Draw shop window background
+    const gradient = ctx.createLinearGradient(
+      this.x,
+      this.y,
+      this.x + 300,
+      this.y,
+    );
+
+    gradient.addColorStop(0, "#222222");
+    gradient.addColorStop(1, "#666666");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(this.x, this.y, 300, 250);
+
+    // Draw shop items
+    const itemsPerRow = 1;
+    const startY = this.y + 20;
+
+    ctx.restore();
+    super.draw(ctx);
+  }
+}
+
+// Create click handlers for the canvas
+
+function checkUIClick(x, y) {
+  let wasPaused = isPaused;
+  ui.handleClick(x, y);
+  // If no UI component handled the click, propagate to game logic
+  if (!gameActive || isPaused || wasPaused) return;
+
+  if (y < 150 && totalBalls > 0) {
+    balls.push(new Ball(x, y));
+    totalBalls--;
+  }
+}
+
+//---------------------
+// High Score Functions
+//---------------------
+function checkHighScore() {
+  const storedHighScore = localStorage.getItem("ballDropHighScore");
+  let currentHighScore = parseInt(storedHighScore) || 0;
+
+  if (score > currentHighScore) {
+    currentHighScore = score;
+    localStorage.setItem("ballDropHighScore", currentHighScore);
+
+    // Show popup for new high score
+    setStatus([`New High Score! ${currentHighScore}`], 3000);
+  }
+}
+
 //---------------------
 // Game Loop Functions
 //---------------------
-
-function drawHUD() {
-  ctx.save();
-  // Draw level info
-  const levelText = `LEVEL ${currentLevel}`;
-  ctx.fillStyle = "white";
-  ctx.font = '16px "Press Start 2P"';
-  ctx.textBaseline = "top";
-  ctx.strokeStyle = "black";
-  ctx.lineWidth = 4;
-  ctx.strokeText(levelText, 10, 10);
-  ctx.fillText(levelText, 10, 10);
-
-  // Draw score with pixel font
-  const scoreText = `SCORE: ${score}`;
-  ctx.font = '12px "Press Start 2P"';
-  ctx.strokeText(scoreText, 10, 30);
-  ctx.fillText(scoreText, 10, 30);
-
-  // Draw credits with pixel font
-  const creditText = `CREDITS: ${credits}`;
-  ctx.font = '12px "Press Start 2P"';
-  ctx.strokeText(creditText, 10, 46);
-  ctx.fillText(creditText, 10, 46);
-
-  // Draw balls remaining with pixel font
-  const remainingText = `BALLS: ${totalBalls}`;
-  ctx.font = '12px "Press Start 2P"';
-  ctx.strokeText(remainingText, 10, 62);
-  ctx.fillText(remainingText, 10, 62);
-
-  ctx.restore();
-}
 
 function updateParticles() {
   // Update and draw particles
@@ -767,118 +1264,50 @@ function drawBuckets() {
   });
 }
 
+// Initialize the UI system
+const ui = new HUDContainer();
+
+// Modify gameLoop to use the new UI system
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawBackground();
 
-  drawHUD();
+  // Draw HUD and update UI components
+  if (gameActive) {
+    ui.update();
+  }
 
-  updateParticles();
-
-  drawPins();
-  drawBuckets();
+  // Only render active UI elements
+  ui.draw(ctx);
 
   // Update and draw balls
-  balls.forEach((ball) => {
-    ball.update();
-    ball.draw();
-  });
+  if (gameActive && !isPaused) {
+    updateParticles();
 
-  if (gameActive) {
+    drawPins();
+    drawBuckets();
+
+    balls.forEach((ball) => {
+      ball.update();
+      ball.draw();
+    });
+
     checkGameEnd();
+    checkHighScore();
   }
 
   requestAnimationFrame(gameLoop);
 }
 
-canvas.addEventListener("click", (event) => {
-  if (!gameActive) return;
+initializeGame();
+gameLoop();
 
+canvas.addEventListener("click", (event) => {
+  // Get click position relative to canvas
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
 
-  if (y < 150 && totalBalls > 0) {
-    balls.push(new Ball(x, y));
-    totalBalls--;
-  }
+  checkUIClick(x, y);
 });
-
-restartButton.addEventListener("click", () => {
-  initializeGame();
-});
-
-// Shop and credits system
-let credits = 0;
-let shopItems = [
-  {
-    name: "10 Extra Balls",
-    cost: 5,
-    action: () => {
-      totalBalls += 10;
-    },
-  },
-  {
-    name: "Big Balls",
-    cost: 10,
-    action: () => {
-      CONFIG.ballRadius += 2;
-    },
-  },
-  {
-    name: "Less Gravity",
-    cost: 10,
-    action: () => {
-      CONFIG.gravity *= 0.8;
-    },
-  },
-  {
-    name: "More Bounce",
-    cost: 15,
-    action: () => {
-      CONFIG.bounce += 0.1;
-    },
-  },
-];
-
-// Initialize shop buttons
-function initShop() {
-  const shopDiv = document.createElement("div");
-  shopDiv.id = "shopMenu";
-  shopDiv.className = "shop-menu";
-  shopDiv.style.display = "none";
-
-  shopItems.forEach((item) => {
-    const button = document.createElement("button");
-    button.className = "shop-item";
-    button.textContent = `${item.name} (${item.cost} credits)`;
-    button.onclick = () => {
-      if (credits >= item.cost) {
-        credits -= item.cost;
-        item.action();
-        setStatus(`Purchased ${item.name}!`);
-      } else {
-        setStatus("Not enough credits!");
-      }
-    };
-    shopDiv.appendChild(button);
-  });
-
-  document.getElementById("gameMenu").appendChild(shopDiv);
-
-  // Add shop button
-  const shopButton = document.getElementById("shopButton");
-  shopButton.onclick = () => toggleShop();
-}
-
-function toggleShop() {
-  const shopMenu = document.getElementById("shopMenu");
-  shopMenu.style.display = shopMenu.style.display === "none" ? "grid" : "none";
-}
-
-// Initialize shop when page loads
-document.addEventListener("DOMContentLoaded", initShop);
-
-initializeGame();
-gameLoop();
