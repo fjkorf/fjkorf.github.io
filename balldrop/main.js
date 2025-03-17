@@ -961,6 +961,12 @@ class LevelIndicator extends Indicator {
   setLevel(level) {
     this.text = `LEVEL ${level}`;
   }
+  update() {
+    super.update();
+    if (gameActive) {
+      this.setLevel(currentLevel);
+    }
+  }
 }
 
 class CreditsIndicator extends Indicator {
