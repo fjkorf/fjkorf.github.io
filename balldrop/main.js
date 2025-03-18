@@ -7,8 +7,8 @@ const gameStatusElement = document.getElementById("gameStatus");
 const gameInfoElement = document.getElementById("gameInfo");
 
 const CONFIG = {
-  blue_pin_chance: 0.1,
-  gold_pin_chance: 0.1,
+  blue_pin_chance: 0.2,
+  gold_pin_chance: 0.2,
   ballRadius: 10,
   pinRadius: 5,
   gravity: 0.2,
@@ -103,20 +103,7 @@ function initializeLevel(level) {
   totalBalls += 5;
 
   // Create new pin layout
-  const l = level % 25;
-  if (levelLayouts[l]) {
-    levelLayouts[l]();
-  } else {
-    // If level doesn't exist, create a random pattern
-    for (let i = 0; i < 30 + level * 5; i++) {
-      pins.push(
-        createPin(
-          100 + Math.random() * (canvas.width - 200),
-          150 + Math.random() * (canvas.height - 300),
-        ),
-      );
-    }
-  }
+  generateLevel(level);
 
   // Create buckets
   buckets.length = 0;
@@ -143,7 +130,7 @@ function initializeGame() {
   bounce = CONFIG.bounce;
 
   ui.restartButton.visible = false;
-  setStatus(["tap above", "to begin"]);
+  showWelcomePopup();
   initializeLevel(currentLevel);
 }
 
@@ -157,10 +144,19 @@ function setStatus(messages, timeout = 3000) {
 }
 
 function showScorePopup(x, y, score) {
-  const rect = canvas.getBoundingClientRect();
-  x += rect.left;
-  y += rect.top;
   ui.children.push(new ScorePopupIndicator(x, y, score));
+}
+function showCreditPopup(x, y, credits) {
+  ui.children.push(new CreditPopupIndicator(x, y, credits));
+}
+function showBallPopup(x, y, balls) {
+  ui.children.push(new BallPopupIndicator(x, y, balls));
+}
+function showHighScorePopup(score) {
+  ui.children.push(new HighScorePupupIndicator(score));
+}
+function showWelcomePopup() {
+  ui.children.push(new WelcomePopupIndicator());
 }
 
 //----------------------
@@ -229,13 +225,14 @@ class Ball {
         // Add balls for blue pins
         if (pin.isBlue) {
           totalBalls += 3;
-          setStatus(["+3 Balls!"]);
+
+          showBallPopup(pin.x, pin.y, 3);
         }
 
         // Add credits for gold pins
         if (pin.isGold) {
           credits += 1;
-          setStatus(["+1 Credit"]);
+          showCreditPopup(pin.x, pin.y, 1);
         }
       }
     });
@@ -365,11 +362,17 @@ function createParticleEffect(x, y, type) {
 }
 
 function createPin(x, y) {
+  if (x < 0.02) x = 0.02;
+  if (x > 0.98) x = 0.98;
+  if (y < 0.02) y = 0.02;
+  if (y > 0.98) y = 0.98;
+  x = x * canvas.width;
+  y = y * canvas.width + 150;
   const isBlue = Math.random() < CONFIG.blue_pin_chance;
   const isGold = !isBlue && Math.random() < CONFIG.gold_pin_chance;
   return {
-    x: x,
-    y: y,
+    x,
+    y,
     radius: CONFIG.pinRadius,
     active: true,
     isBlue,
@@ -390,24 +393,13 @@ function placePattern(pattern) {
     });
   });
 }
-
 // Different level layouts
-const levelLayouts = {
-  1: function () {
-    // Triangle pattern
-    for (let row = 0; row < 8; row++) {
-      for (let col = 0; col <= row; col++) {
-        pins.push(
-          createPin(canvas.width / 2 - row * 25 + col * 50, 150 + row * 50),
-        );
-      }
-    }
-  },
-  2: function () {
+const levelLayouts = [
+  function () {
     // Diamond pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const size = 40;
+    const centerX = 0.5;
+    const centerY = 0.5;
+    const size = 0.125;
     for (let i = -4; i <= 4; i++) {
       for (let j = -4; j <= 4; j++) {
         if (Math.abs(i) + Math.abs(j) <= 4) {
@@ -416,28 +408,28 @@ const levelLayouts = {
       }
     }
   },
-  3: function () {
+  function () {
     // Grid pattern
     for (let i = 0; i < 6; i++) {
       for (let j = 0; j < 8; j++) {
-        pins.push(createPin(100 + i * 50, 150 + j * 50));
+        pins.push(createPin(i / 5, j / 7));
       }
     }
   },
-  4: function () {
+  function () {
     // Zigzag pattern
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 3; j++) {
-        pins.push(createPin(75 + i * 30 + (j % 2) * 15, 150 + j * 100));
+        pins.push(createPin(0.1 + i * 0.08 + (j % 2) * 0.15, 0.15 + j / 3));
       }
     }
   },
-  5: function () {
+  function () {
     // Circular pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = 0.5;
+    const centerY = 0.5;
     for (let ring = 1; ring <= 3; ring++) {
-      const radius = ring * 60;
+      const radius = ring * 0.15;
       const pinCount = ring * 8;
       for (let i = 0; i < pinCount; i++) {
         const angle = (i / pinCount) * Math.PI * 2;
@@ -450,62 +442,18 @@ const levelLayouts = {
       }
     }
   },
-  6: function () {
-    placePattern([
-      [1, 1, 0, 0, 0, 1, 1],
-      [1, 1, 1, 0, 1, 1, 1],
-      [0, 1, 1, 1, 1, 1, 0],
-      [0, 0, 1, 1, 1, 0, 0],
-      [0, 1, 1, 1, 1, 1, 0],
-      [1, 1, 1, 0, 1, 1, 1],
-      [1, 1, 0, 0, 0, 1, 1],
-    ]);
-  },
-  7: function () {
-    placePattern([
-      [1, 0, 0, 1, 0, 0, 1],
-      [0, 1, 0, 1, 0, 1, 0],
-      [0, 0, 1, 1, 1, 0, 0],
-      [1, 1, 1, 1, 1, 1, 1],
-      [0, 0, 1, 1, 1, 0, 0],
-      [0, 1, 0, 1, 0, 1, 0],
-      [1, 0, 0, 1, 0, 0, 1],
-    ]);
-  },
-  8: function () {
-    placePattern([
-      [1, 0, 1, 1, 1, 0, 1],
-      [0, 0, 1, 0, 1, 0, 0],
-      [0, 0, 0, 0, 1, 0, 0],
-      [0, 0, 1, 1, 1, 0, 0],
-      [0, 0, 1, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [1, 0, 1, 0, 0, 0, 1],
-    ]);
-  },
-  9: function () {
-    placePattern([
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 0, 1, 0, 1, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 0, 1, 0, 1, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 0, 1, 0, 1, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-    ]);
-  },
 
-  10: function () {
+  function () {
     // Random Clusters
     const clusters = 5;
     for (let c = 0; c < clusters; c++) {
-      const centerX = 150 + Math.random() * (canvas.width - 300);
-      const centerY = 150 + Math.random() * (canvas.height - 300);
+      const centerX = Math.random() * 0.5 + 0.25;
+      const centerY = Math.random() * 0.5 + 0.25;
       const clusterSize = 8;
 
       for (let i = 0; i < clusterSize; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const radius = Math.random() * 50;
+        const radius = Math.random() * 0.15 + 0.15;
         pins.push(
           createPin(
             centerX + Math.cos(angle) * radius,
@@ -516,15 +464,15 @@ const levelLayouts = {
     }
   },
 
-  11: function () {
+  function () {
     // Double Diamond
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = 0.5;
+    const centerY = 0.5;
     // Upper diamond
     for (let i = -3; i <= 3; i++) {
       for (let j = -3; j <= 3; j++) {
         if (Math.abs(i) + Math.abs(j) <= 3) {
-          pins.push(createPin(centerX + i * 40, centerY - 100 + j * 40));
+          pins.push(createPin(centerX + i * 0.1, centerY - 0.12 + j * 0.1));
         }
       }
     }
@@ -532,17 +480,17 @@ const levelLayouts = {
     for (let i = -3; i <= 3; i++) {
       for (let j = -3; j <= 3; j++) {
         if (Math.abs(i) + Math.abs(j) <= 3) {
-          pins.push(createPin(centerX + i * 40, centerY + 100 + j * 40));
+          pins.push(createPin(centerX + i * 0.1, centerY + 0.13 + j * 0.1));
         }
       }
     }
   },
 
-  12: function () {
+  function () {
     // Spiral Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const spiralRadius = 150;
+    const centerX = 0.5;
+    const centerY = 0.5;
+    const spiralRadius = 0.4;
     const turns = 3;
     const pointsPerTurn = 15;
 
@@ -558,13 +506,13 @@ const levelLayouts = {
     }
   },
 
-  13: function () {
+  function () {
     // Star Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = 0.5;
+    const centerY = 0.5;
     const points = 5;
-    const innerRadius = 20;
-    const outerRadius = 130;
+    const innerRadius = 0.1;
+    const outerRadius = 0.45;
 
     // Create star points
     for (let i = 0; i < points * 2; i++) {
@@ -583,11 +531,11 @@ const levelLayouts = {
     }
   },
 
-  14: function () {
+  function () {
     // Honeycomb Pattern
-    const hexRadius = 30;
-    const startX = 100;
-    const startY = 150;
+    const hexRadius = 0.09;
+    const startX = 0.1;
+    const startY = 0.15;
 
     for (let row = 0; row < 5; row++) {
       const offsetX = row % 2 === 0 ? 0 : hexRadius * Math.cos(Math.PI / 6);
@@ -602,11 +550,11 @@ const levelLayouts = {
     }
   },
 
-  15: function () {
+  function () {
     // Crosshair Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const spacing = 30;
+    const centerX = 0.5;
+    const centerY = 0.5;
+    const spacing = 0.1;
 
     // Vertical line
     for (let y = -5; y <= 5; y++) {
@@ -628,72 +576,14 @@ const levelLayouts = {
     }
   },
 
-  16: function () {
-    // Circular Rings
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const rings = 4;
-
-    for (let ring = 1; ring <= rings; ring++) {
-      const radius = ring * 50;
-      const pinCount = ring * 8;
-      for (let pin = 0; pin < pinCount; pin++) {
-        const angle = (pin / pinCount) * Math.PI * 2;
-        pins.push(
-          createPin(
-            centerX + Math.cos(angle) * radius,
-            centerY + Math.sin(angle) * radius,
-          ),
-        );
-      }
-    }
-  },
-  17: function () {
-    // Hexagonal Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const ringCount = 3;
-
-    for (let ring = 0; ring < ringCount; ring++) {
-      const radius = 60 + ring * 40;
-      const sides = 6;
-      const angleIncrement = Math.PI / 3;
-
-      for (let i = 0; i < sides; i++) {
-        const angle = angleIncrement * i;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        pins.push(createPin(x, y));
-      }
-    }
-  },
-
-  18: function () {
-    // Square Spiral Pattern
-    let x = 0,
-      y = 0;
-    const steps = 20;
-    const spacing = 30;
-
-    for (let i = 0; i < steps; i++) {
-      const stepSize = Math.min(i % 4 === 1 ? 2 : 1, i);
-      x += i % 2 === 0 ? 1 : -1;
-      y += i % 2 !== 0 ? 1 : -1;
-
-      for (let j = 0; j < stepSize; j++) {
-        pins.push(createPin(centerX + x * spacing, centerY + y * spacing));
-      }
-    }
-  },
-
-  19: function () {
+  function () {
     // Radial Grid Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = 0.5;
+    const centerY = 0.5;
     const rings = 4;
 
     for (let ring = 0; ring < rings; ring++) {
-      const radius = 50 + ring * 30;
+      const radius = 0.05 + ring * 0.07;
       const squareSize = 6;
       const halfSize = squareSize / 2;
 
@@ -707,44 +597,28 @@ const levelLayouts = {
     }
   },
 
-  20: function () {
+  function () {
     // Checkerboard Pattern
-    const gridSize = 6;
-    const spacing = canvas.width / (gridSize * 2);
+    const gridSize = 10;
+    const spacing = 1 / (gridSize * 2);
 
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         if ((row + col) % 2 === 0) {
-          pins.push(createPin(50 + col * spacing, 150 + row * spacing));
+          pins.push(createPin(0.3 + col * spacing, 0.1 + row * spacing));
         }
       }
     }
   },
 
-  21: function () {
-    // Fibonacci Spiral Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    let a = 0,
-      b = 1;
-
-    for (let i = 0; i < 30; i++) {
-      const radius = Math.pow(i + 1, 0.6);
-      const angle = (Math.sqrt(i) * Math.PI) / 2;
-
-      pins.push(createPin(centerX + a * radius, centerY + b * radius));
-      [a, b] = [b - a, a];
-    }
-  },
-
-  22: function () {
+  function () {
     // Curl Pattern
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const curls = 4;
+    const centerX = 0.5;
+    const centerY = 0.5;
+    const curls = 2;
 
     for (let c = 0; c < curls; c++) {
-      const radius = 50 + c * 30;
+      const radius = 0.2 + c * 0.1;
       const amplitude = 15;
       const wavelength = (Math.PI * 2) / (radius / 4);
 
@@ -758,7 +632,23 @@ const levelLayouts = {
       }
     }
   },
-};
+  function () {
+    const numPoints = 40; // Varies between 36-48
+    const frequencyRatio = 2.5;
+
+    for (let t = 0; t < numPoints; t++) {
+      const theta = (Math.PI * 2 * t) / numPoints;
+      const x = Math.sin(theta);
+      const y = Math.sin(theta * frequencyRatio);
+
+      // Scale and normalize to [0,1]
+      const scaledX = (x + 1) / 2;
+      const scaledY = (y + 1) / 2;
+
+      pins.push(createPin(scaledX, scaledY));
+    }
+  },
+];
 
 function checkGameEnd() {
   if (levelOver == true) {
@@ -824,6 +714,15 @@ function drawPin(pin) {
   ctx.fill();
 
   ctx.restore();
+}
+
+//---------------------
+// Level Generation
+//---------------------
+
+function generateLevel(level) {
+  const l = level % levelLayouts.length;
+  levelLayouts[l]();
 }
 
 //---------------------
@@ -908,11 +807,36 @@ class HUDContainer extends UIComponent {
     this.restartButton.width = canvas.width - 20;
     this.restartButton.visible = false;
 
-    this.add(new LevelIndicator());
-    this.add(new ScoreIndicator());
-    this.add(new CreditsIndicator());
-    this.add(new BallsIndicator());
-    this.add(new HighScoreIndicator());
+    this.add(
+      new Indicator("HIGH SC:", 10, 10, (i) => {
+        const storedHighScore = localStorage.getItem("ballDropHighScore") || 0;
+        i.text = `HIGH SC: ${storedHighScore}`;
+      }),
+    );
+
+    this.add(
+      new Indicator("SCORE  :", 10, 30, (i) => {
+        i.text = `SCORE  : ${score}`;
+      }),
+    );
+    this.add(
+      new Indicator("LEVEL  : 0", 10, 50, (i) => {
+        i.text = `LEVEL  : ${currentLevel}`;
+      }),
+    );
+    this.add(
+      new Indicator("CREDITS:", 10, 70, (i) => {
+        i.text = `CREDITS: ${credits}`;
+      }),
+    );
+    this.add(
+      new Indicator(
+        "BALLS  : 0",
+        10,
+        90,
+        (i) => (i.text = `BALLS  : ${totalBalls}`),
+      ),
+    );
     this.add(new ShopMenu());
     this.add(new TitleIndicator());
     this.add(this.restartButton);
@@ -932,13 +856,14 @@ class HUDContainer extends UIComponent {
 
 // Create specific UI components for HUD elements
 class Indicator extends UIComponent {
-  constructor(text, x, y) {
+  constructor(text, x, y, update = () => {}) {
     super(x, y);
 
     this.text = text;
     this.textColor = "white";
     this.strokeColor = "#404040";
     this.font = '12px "Press Start 2P"';
+    this._onUpdate = update;
   }
 
   draw(ctx) {
@@ -951,100 +876,16 @@ class Indicator extends UIComponent {
     ctx.strokeText(this.text, this.x + 10, this.y + 20);
     ctx.fillText(this.text, this.x + 10, this.y + 20);
   }
-}
-
-class LevelIndicator extends Indicator {
-  constructor() {
-    super("LEVEL 1", 10, 50);
-  }
-
-  setLevel(level) {
-    this.text = `LEVEL ${level}`;
-  }
-  update() {
-    super.update();
-    if (gameActive) {
-      this.setLevel(currentLevel);
-    }
-  }
-}
-
-class CreditsIndicator extends Indicator {
-  constructor() {
-    super("CREDITS: 0", 10, 70);
-
-    // Update score whenever called
-    this.updateScore = () => {
-      this.text = `CREDITS: ${credits}`;
-    };
-  }
 
   update() {
     super.update();
-    if (gameActive) {
-      this.updateScore();
-    }
-  }
-}
-
-class ScoreIndicator extends Indicator {
-  constructor() {
-    super("SCORE: 0", 10, 30);
-
-    // Update score whenever called
-    this.updateScore = () => {
-      this.text = `SCORE: ${score}`;
-    };
-  }
-
-  update() {
-    super.update();
-    if (gameActive) {
-      this.text = `SCORE: ${score}`;
-    }
-  }
-}
-
-class BallsIndicator extends Indicator {
-  constructor() {
-    super("BALLS: 15", 10, 90);
-
-    // Update balls whenever called
-    this.updateBalls = () => {
-      this.text = `BALLS: ${totalBalls}`;
-    };
-  }
-
-  update() {
-    super.update();
-    if (gameActive) {
-      this.updateBalls();
-    }
-  }
-}
-
-class HighScoreIndicator extends Indicator {
-  constructor() {
-    super("HIGH SCORE", 10, 10);
-
-    // Update high score whenever called
-    this.updateHighScore = () => {
-      const storedHighScore = localStorage.getItem("ballDropHighScore") || 0;
-      this.text = `HIGH: ${storedHighScore}`;
-    };
-  }
-
-  update() {
-    super.update();
-    if (gameActive) {
-      this.updateHighScore();
-    }
+    this._onUpdate(this);
   }
 }
 
 class MessageIndicator extends Indicator {
   constructor(message, y = 0, timeout = 1200) {
-    super(message, canvas.width / 2 - 100, canvas.height / 3 + y);
+    super(message, canvas.width / 2 - 120, canvas.height / 2.2 + y);
     this.font = '16px "Press Start 2P"';
     const item = this;
     setTimeout(() => ui.remove(item), timeout);
@@ -1058,7 +899,7 @@ class MessageIndicator extends Indicator {
 
 class ScorePopupIndicator extends Indicator {
   constructor(x, y, score) {
-    super(`+${score}`, x, y);
+    super(`+${score}`, x - 2, y);
     const item = this;
     setTimeout(() => ui.remove(item), 1000);
   }
@@ -1068,12 +909,54 @@ class ScorePopupIndicator extends Indicator {
   }
 }
 
+class CreditPopupIndicator extends Indicator {
+  constructor(x, y, credits) {
+    super(`+${credits} CREDIT` + (credits > 1 ? "S" : ""), x - 5, y + 1);
+    const item = this;
+    item.textColor = "orange";
+    setTimeout(() => ui.remove(item), 1000);
+  }
+}
+
+class BallPopupIndicator extends Indicator {
+  constructor(x, y, balls) {
+    super(`+${balls} BALL` + (balls > 1 ? "S" : ""), x - 2, y + 1);
+    const item = this;
+    item.textColor = "#4A90E2";
+    setTimeout(() => ui.remove(item), 1000);
+  }
+}
+class HighScorePupupIndicator extends Indicator {
+  constructor(score) {
+    const halfW = (canvas.clientWidth - 100) / 2;
+    const x = halfW - halfW + Math.random() * halfW;
+    super("New High Score!", x, (canvas.clientHeight / 3) * 2);
+    const item = this;
+    this.font = '16px "Press Start 2P"';
+    setTimeout(() => ui.remove(item), 2000);
+  }
+  update() {
+    super.update();
+    this.y -= 1.5;
+  }
+}
+
+class WelcomePopupIndicator extends Indicator {
+  constructor() {
+    super("Tap Along Here To Play", 10, 100);
+    const item = this;
+    this.font = '16px "Press Start 2P"';
+    this.textColor = "orange";
+    setTimeout(() => ui.remove(item), 6000);
+  }
+}
+
 class TitleIndicator extends Indicator {
   constructor(message) {
-    super("BallDrop", canvas.width / 2 - 120, canvas.height / 2);
-    this.font = '32px "Press Start 2P"';
+    super("BallDrop", 5, canvas.height / 2);
+    this.font = '48px "Press Start 2P"';
     const item = this;
-    setTimeout(() => ui.remove(item), 5000);
+    setTimeout(() => ui.remove(item), 3000);
   }
 
   update() {
@@ -1221,7 +1104,7 @@ function checkHighScore() {
     localStorage.setItem("ballDropHighScore", currentHighScore);
 
     // Show popup for new high score
-    setStatus([`New High Score! ${currentHighScore}`], 3000);
+    showHighScorePopup(currentHighScore);
   }
 }
 
